@@ -107,5 +107,6 @@ func BenchmarkZeroLogger(b *testing.B) {
 				"key":      "keyValue",
 				"category": "groupcache",
 			}).Printf("error retrieving key from peer %s", "http://127.0.0.1:8080")
+		buf.Reset()
 	}
 }
