@@ -107,7 +107,7 @@ type ZeroLogger struct {
 }
 
 func (zl ZeroLogger) Error() Logger {
-	return &ZeroLogger{
+	return ZeroLogger{
 		l: zl.l,
 		e: zl.l.Error(),
 	}
