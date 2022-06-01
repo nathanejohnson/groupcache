@@ -42,7 +42,7 @@ var logger Logger
 
 // SetLogger - this is legacy to provide backwards compatibility with logrus.
 func SetLogger(log *logrus.Entry) {
-	logger = &LogrusLogger{Entry: log}
+	logger = LogrusLogger{Entry: log}
 }
 
 // SetLoggerFromLogger - set the logger to an implementation of the Logger interface
