@@ -3,6 +3,7 @@ package groupcache
 import (
 	"bytes"
 	"errors"
+	"github.com/rs/zerolog"
 	"github.com/sirupsen/logrus"
 	"testing"
 )
@@ -19,10 +20,11 @@ func TestLogrusLogger(t *testing.T) {
 	e = e.WithField("ContextKey", "ContextVal")
 	SetLogger(e)
 	logger.Error().
-		ErrorField("err", errors.New("test error")).
-		StringField("key", "keyValue").
-		StringField("category", "groupcache").
-		Printf("error retrieving key from peer %s", "http://127.0.0.1:8080")
+		WithFields(map[string]interface{}{
+			"err":      errors.New("test error"),
+			"key":      "keyValue",
+			"category": "groupcache",
+		}).Printf("error retrieving key from peer %s", "http://127.0.0.1:8080")
 
 	interfaceOut := buf.String()
 	buf.Reset()
@@ -34,5 +36,76 @@ func TestLogrusLogger(t *testing.T) {
 	logrusOut := buf.String()
 	if interfaceOut != logrusOut {
 		t.Errorf("output is not the same.\ngot:\n%s\nwant:\n%s", interfaceOut, logrusOut)
+	}
+}
+
+func TestZerologLogger(t *testing.T) {
+	var buf bytes.Buffer
+	l := zerolog.New(&buf)
+	SetLoggerFromLogger(NewZeroLogger(l))
+	logger.Error().
+		WithFields(map[string]interface{}{
+			"err":      errors.New("test error"),
+			"key":      "keyValue",
+			"category": "groupcache",
+		}).Printf("error retrieving key from peer %s", "http://127.0.0.1:8080")
+
+	logger.Warn().
+		ErrorField("err", errors.New("test error 2")).
+		StringField("key", "keyValue 2").
+		StringField("category", "groupcache").
+		Printf("error retrieving key from peer %s", "http://127.0.0.1:8080")
+	t.Logf("output: %s", buf.String())
+}
+
+func BenchmarkLogrusLogger(b *testing.B) {
+	var buf bytes.Buffer
+	l := logrus.New()
+	l.SetFormatter(&logrus.TextFormatter{
+		DisableTimestamp: true,
+	})
+	l.Out = &buf
+	e := logrus.NewEntry(l)
+	SetLogger(e)
+	for i := 0; i < b.N; i++ {
+		logger.Error().
+			WithFields(map[string]interface{}{
+				"err":      errors.New("test error"),
+				"key":      "keyValue",
+				"category": "groupcache",
+			}).Printf("error retrieving key from peer %s", "http://127.0.0.1:8080")
+		buf.Reset()
+	}
+}
+
+func BenchmarkLogrus(b *testing.B) {
+	var buf bytes.Buffer
+	l := logrus.New()
+	l.SetFormatter(&logrus.TextFormatter{
+		DisableTimestamp: true,
+	})
+	l.Out = &buf
+	e := logrus.NewEntry(l)
+	for i := 0; i < b.N; i++ {
+		e.WithFields(logrus.Fields{
+			"err":      errors.New("test error"),
+			"key":      "keyValue",
+			"category": "groupcache",
+		}).Errorf("error retrieving key from peer %s", "http://127.0.0.1:8080")
+		buf.Reset()
+	}
+}
+
+func BenchmarkZeroLogger(b *testing.B) {
+	var buf bytes.Buffer
+	l := zerolog.New(&buf)
+	SetLoggerFromLogger(NewZeroLogger(l))
+	for i := 0; i < b.N; i++ {
+		logger.Error().
+			WithFields(map[string]interface{}{
+				"err":      errors.New("test error"),
+				"key":      "keyValue",
+				"category": "groupcache",
+			}).Printf("error retrieving key from peer %s", "http://127.0.0.1:8080")
 	}
 }

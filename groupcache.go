@@ -353,7 +353,7 @@ func (g *Group) load(ctx context.Context, key string, dest Sink) (value ByteView
 		// cache.nbytes would be incremented below even though there will
 		// be only one entry for this key.
 		//
-		// Consider the following serialized event ordering for two
+		// Consider the following serialized e ordering for two
 		// goroutines in which this callback gets called twice for hte
 		// same key:
 		// 1: Get("key")
